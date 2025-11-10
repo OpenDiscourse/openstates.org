@@ -1,0 +1,133 @@
+{% extends "public/components/base.html" %}
+{% load static %}
+
+{% block title %}Run Analysis - Analysis Dashboard - Open States{% endblock %}
+
+{% block content %}
+<div class="run-analysis">
+    <h1>Run Analysis Job</h1>
+    <p>Submit a new analysis job to process OpenStates data.</p>
+    
+    <form method="post" id="analysis-form" class="analysis-form">
+        {% csrf_token %}
+        
+        <div class="grid-x grid-margin-x">
+            <div class="cell medium-6">
+                <label>Analysis Type
+                    <select name="job_type" id="job-type" required>
+                        <option value="">Select analysis type...</option>
+                        {% for type_code, type_name in job_types %}
+                        <option value="{{ type_code }}">{{ type_name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            
+            <div class="cell medium-6">
+                <label>Jurisdiction (optional)
+                    <select name="jurisdiction" id="jurisdiction">
+                        <option value="">All Jurisdictions</option>
+                        {% for jur in jurisdictions %}
+                        <option value="{{ jur.id }}">{{ jur.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            
+            <div class="cell medium-6">
+                <label>Legislative Session (optional)
+                    <select name="session" id="session">
+                        <option value="">All Sessions</option>
+                    </select>
+                </label>
+            </div>
+            
+            <div class="cell medium-12 mt2">
+                <button type="submit" class="button primary large">Submit Job</button>
+                <a href="{% url 'analysis:dashboard' %}" class="button">Cancel</a>
+            </div>
+        </div>
+    </form>
+    
+    <div id="job-result" class="callout success" style="display: none; margin-top: 2rem;">
+        <h3>Job Created Successfully!</h3>
+        <p id="result-message"></p>
+        <a href="" id="view-job-link" class="button">View Job</a>
+        <a href="{% url 'analysis:run_analysis' %}" class="button">Create Another</a>
+    </div>
+    
+    <div class="mt3">
+        <h2>Available Analysis Types</h2>
+        <div class="callout">
+            <h4>NLP Analysis</h4>
+            <p>Extract topics, entities, and sentiment from bill text using natural language processing.</p>
+        </div>
+        
+        <div class="callout">
+            <h4>Embeddings Generation</h4>
+            <p>Generate vector embeddings for bills using sentence transformers for similarity search.</p>
+        </div>
+        
+        <div class="callout">
+            <h4>Sentiment Analysis</h4>
+            <p>Analyze sentiment and tone of legislative text using BERT-based models.</p>
+        </div>
+        
+        <div class="callout">
+            <h4>Comparison Analysis</h4>
+            <p>Compare voting patterns with social media statements to identify discrepancies.</p>
+        </div>
+        
+        <div class="callout">
+            <h4>Bulk Data Import</h4>
+            <p>Import data from external sources into the analysis database.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.analysis-form {
+    background: #f4f4f4;
+    padding: 2rem;
+    border-radius: 5px;
+}
+
+.mt2 {
+    margin-top: 2rem;
+}
+
+.mt3 {
+    margin-top: 3rem;
+}
+</style>
+
+<script>
+document.getElementById('analysis-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('{% url "analysis:run_analysis" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            document.getElementById('result-message').textContent = data.message;
+            document.getElementById('view-job-link').href = '/analysis/jobs/' + data.job_id + '/';
+            document.getElementById('job-result').style.display = 'block';
+            document.getElementById('analysis-form').style.display = 'none';
+        } else {
+            alert('Error creating job: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error submitting job: ' + error);
+    });
+});
+</script>
+{% endblock %}

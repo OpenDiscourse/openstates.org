@@ -1,0 +1,101 @@
+{% extends "public/components/base.html" %}
+{% load static %}
+
+{% block title %}Search Legislators - Analysis Dashboard - Open States{% endblock %}
+
+{% block content %}
+<div class="search-legislators">
+    <h1>Search Legislators</h1>
+    
+    <form method="get" class="search-form">
+        <div class="grid-x grid-margin-x">
+            <div class="cell medium-6">
+                <label>Search by Name
+                    <input type="text" name="q" value="{{ query }}" placeholder="Enter legislator name...">
+                </label>
+            </div>
+            <div class="cell medium-4">
+                <label>Filter by Jurisdiction
+                    <select name="jurisdiction">
+                        <option value="">All Jurisdictions</option>
+                        {% for jur in jurisdictions %}
+                        <option value="{{ jur.id }}" {% if jur.id == jurisdiction %}selected{% endif %}>
+                            {{ jur.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            <div class="cell medium-2">
+                <label>&nbsp;</label>
+                <button type="submit" class="button primary expanded">Search</button>
+            </div>
+        </div>
+    </form>
+    
+    <div class="results mt2">
+        <h2>Results ({{ legislators|length }})</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Party</th>
+                    <th>Jurisdiction</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for legislator in legislators %}
+                <tr>
+                    <td>{{ legislator.name }}</td>
+                    <td>
+                        {% if legislator.party %}
+                        {{ legislator.party.name }}
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% for membership in legislator.memberships.all|slice:":1" %}
+                        {{ membership.organization.jurisdiction.name }}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <a href="{% url 'analysis:legislator_profile' legislator.id %}" class="button small">
+                            View Profile
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">
+                        {% if query or jurisdiction %}
+                        No legislators found matching your search criteria.
+                        {% else %}
+                        Enter a search term to find legislators.
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="mt2">
+        <a href="{% url 'analysis:dashboard' %}" class="button">Back to Dashboard</a>
+    </div>
+</div>
+
+<style>
+.search-form {
+    background: #f4f4f4;
+    padding: 1.5rem;
+    border-radius: 5px;
+    margin-bottom: 2rem;
+}
+
+.mt2 {
+    margin-top: 2rem;
+}
+</style>
+{% endblock %}

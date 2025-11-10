@@ -1,0 +1,149 @@
+{% extends "public/components/base.html" %}
+{% load static %}
+
+{% block title %}Analysis Jobs - Analysis Dashboard - Open States{% endblock %}
+
+{% block content %}
+<div class="jobs-list">
+    <h1>Analysis Jobs</h1>
+    
+    <div class="filters">
+        <form method="get" class="filter-form">
+            <div class="grid-x grid-margin-x">
+                <div class="cell medium-4">
+                    <label>Filter by Type
+                        <select name="type">
+                            <option value="">All Types</option>
+                            <option value="nlp" {% if job_type == 'nlp' %}selected{% endif %}>NLP Analysis</option>
+                            <option value="embeddings" {% if job_type == 'embeddings' %}selected{% endif %}>Embeddings</option>
+                            <option value="sentiment" {% if job_type == 'sentiment' %}selected{% endif %}>Sentiment</option>
+                            <option value="comparison" {% if job_type == 'comparison' %}selected{% endif %}>Comparison</option>
+                            <option value="bulk_import" {% if job_type == 'bulk_import' %}selected{% endif %}>Bulk Import</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="cell medium-4">
+                    <label>Filter by Status
+                        <select name="status">
+                            <option value="">All Statuses</option>
+                            <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="running" {% if status == 'running' %}selected{% endif %}>Running</option>
+                            <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="failed" {% if status == 'failed' %}selected{% endif %}>Failed</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="cell medium-4">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="button primary expanded">Apply Filters</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <table class="jobs-table mt2">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Updated</th>
+                <th>Progress</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+            <tr>
+                <td>{{ job.id }}</td>
+                <td>{{ job.get_job_type_display }}</td>
+                <td><span class="label {{ job.status }}">{{ job.status }}</span></td>
+                <td>{{ job.created_at|date:"M d, Y H:i" }}</td>
+                <td>{{ job.updated_at|date:"M d, Y H:i" }}</td>
+                <td>
+                    {% if job.total_items > 0 %}
+                    <div class="progress" role="progressbar" aria-valuenow="{{ job.processed_items }}" 
+                         aria-valuemin="0" aria-valuemax="{{ job.total_items }}">
+                        <div class="progress-meter" style="width: {% widthratio job.processed_items job.total_items 100 %}%">
+                            {{ job.processed_items }}/{{ job.total_items }}
+                        </div>
+                    </div>
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'analysis:job_detail' job.id %}" class="button tiny">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No jobs found. <a href="{% url 'analysis:run_analysis' %}">Create a new job</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="mt2">
+        <a href="{% url 'analysis:run_analysis' %}" class="button primary">Create New Job</a>
+        <a href="{% url 'analysis:dashboard' %}" class="button">Back to Dashboard</a>
+    </div>
+</div>
+
+<style>
+.filter-form {
+    background: #f4f4f4;
+    padding: 1.5rem;
+    border-radius: 5px;
+}
+
+.label {
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.875rem;
+}
+
+.label.pending {
+    background: #ffae00;
+    color: #fff;
+}
+
+.label.running {
+    background: #1779ba;
+    color: #fff;
+}
+
+.label.completed {
+    background: #3adb76;
+    color: #fff;
+}
+
+.label.failed {
+    background: #cc4b37;
+    color: #fff;
+}
+
+.progress {
+    height: 1.5rem;
+    background: #e6e6e6;
+    border-radius: 3px;
+    margin-bottom: 0;
+}
+
+.progress-meter {
+    background: #1779ba;
+    height: 100%;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.75rem;
+}
+
+.mt2 {
+    margin-top: 2rem;
+}
+</style>
+{% endblock %}

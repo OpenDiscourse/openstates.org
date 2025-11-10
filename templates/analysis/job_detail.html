@@ -1,0 +1,152 @@
+{% extends "public/components/base.html" %}
+{% load static %}
+
+{% block title %}Job {{ job.id }} - Analysis Dashboard - Open States{% endblock %}
+
+{% block content %}
+<div class="job-detail">
+    <h1>Job {{ job.id }}: {{ job.get_job_type_display }}</h1>
+    
+    <div class="grid-x grid-margin-x">
+        <div class="cell medium-8">
+            <div class="card">
+                <div class="card-section">
+                    <h3>Status: <span class="label {{ job.status }}">{{ job.status }}</span></h3>
+                    
+                    <dl>
+                        <dt>Created:</dt>
+                        <dd>{{ job.created_at|date:"F d, Y H:i:s" }}</dd>
+                        
+                        <dt>Updated:</dt>
+                        <dd>{{ job.updated_at|date:"F d, Y H:i:s" }}</dd>
+                        
+                        {% if job.started_at %}
+                        <dt>Started:</dt>
+                        <dd>{{ job.started_at|date:"F d, Y H:i:s" }}</dd>
+                        {% endif %}
+                        
+                        {% if job.completed_at %}
+                        <dt>Completed:</dt>
+                        <dd>{{ job.completed_at|date:"F d, Y H:i:s" }}</dd>
+                        {% endif %}
+                    </dl>
+                    
+                    {% if job.total_items > 0 %}
+                    <h4>Progress</h4>
+                    <div class="progress large" role="progressbar">
+                        <div class="progress-meter" style="width: {% widthratio job.processed_items job.total_items 100 %}%">
+                            {{ job.processed_items }}/{{ job.total_items }} ({% widthratio job.processed_items job.total_items 100 %}%)
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if job.error_message %}
+                    <div class="callout alert mt2">
+                        <h4>Error</h4>
+                        <pre>{{ job.error_message }}</pre>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="cell medium-4">
+            <div class="card">
+                <div class="card-section">
+                    <h3>Parameters</h3>
+                    {% if job.parameters %}
+                    <pre>{{ job.parameters|pprint }}</pre>
+                    {% else %}
+                    <p>No parameters specified.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if job.results %}
+            <div class="card mt2">
+                <div class="card-section">
+                    <h3>Results</h3>
+                    <pre>{{ job.results|pprint }}</pre>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="mt2">
+        <a href="{% url 'analysis:jobs_list' %}" class="button">Back to Jobs</a>
+        <a href="{% url 'analysis:dashboard' %}" class="button">Dashboard</a>
+    </div>
+</div>
+
+<style>
+.label {
+    padding: 0.5rem 1rem;
+    border-radius: 3px;
+    font-size: 1rem;
+}
+
+.label.pending {
+    background: #ffae00;
+    color: #fff;
+}
+
+.label.running {
+    background: #1779ba;
+    color: #fff;
+}
+
+.label.completed {
+    background: #3adb76;
+    color: #fff;
+}
+
+.label.failed {
+    background: #cc4b37;
+    color: #fff;
+}
+
+.progress {
+    height: 2rem;
+    background: #e6e6e6;
+    border-radius: 3px;
+    margin-bottom: 0;
+}
+
+.progress-meter {
+    background: #1779ba;
+    height: 100%;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.875rem;
+}
+
+dl {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 0.5rem;
+}
+
+dt {
+    font-weight: bold;
+}
+
+dd {
+    margin: 0;
+}
+
+pre {
+    background: #f4f4f4;
+    padding: 1rem;
+    border-radius: 3px;
+    overflow-x: auto;
+}
+
+.mt2 {
+    margin-top: 2rem;
+}
+</style>
+{% endblock %}

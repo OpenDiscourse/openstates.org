@@ -1,0 +1,215 @@
+{% extends "public/components/base.html" %}
+{% load static %}
+
+{% block title %}Analysis Dashboard - Open States{% endblock %}
+
+{% block content %}
+<div class="analysis-dashboard">
+    <h1>Analysis Dashboard</h1>
+    
+    <div class="grid-x grid-margin-x">
+        <!-- Statistics Cards -->
+        <div class="cell medium-3">
+            <div class="card stats-card">
+                <div class="card-section">
+                    <h3>{{ total_analyses }}</h3>
+                    <p>Bill Analyses</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cell medium-3">
+            <div class="card stats-card">
+                <div class="card-section">
+                    <h3>{{ total_profiles }}</h3>
+                    <p>Legislator Profiles</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cell medium-3">
+            <div class="card stats-card">
+                <div class="card-section">
+                    <h3 id="pending-jobs">-</h3>
+                    <p>Pending Jobs</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cell medium-3">
+            <div class="card stats-card">
+                <div class="card-section">
+                    <h3 id="running-jobs">-</h3>
+                    <p>Running Jobs</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation Menu -->
+    <div class="grid-x grid-margin-x mt2">
+        <div class="cell medium-12">
+            <h2>Tools</h2>
+            <div class="button-group">
+                <a href="{% url 'analysis:data_explorer' %}" class="button">Data Explorer</a>
+                <a href="{% url 'analysis:search_legislators' %}" class="button">Search Legislators</a>
+                <a href="{% url 'analysis:run_analysis' %}" class="button primary">Run Analysis</a>
+                <a href="{% url 'analysis:jobs_list' %}" class="button">View Jobs</a>
+                <a href="{% url 'analysis:ingestion_logs' %}" class="button">Ingestion Logs</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Jobs -->
+    <div class="grid-x grid-margin-x mt2">
+        <div class="cell medium-12">
+            <h2>Recent Analysis Jobs</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Progress</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in recent_jobs %}
+                    <tr>
+                        <td>{{ job.id }}</td>
+                        <td>{{ job.get_job_type_display }}</td>
+                        <td><span class="label {{ job.status }}">{{ job.status }}</span></td>
+                        <td>{{ job.created_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            {% if job.total_items > 0 %}
+                                {{ job.processed_items }}/{{ job.total_items }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'analysis:job_detail' job.id %}">View</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">No jobs yet. <a href="{% url 'analysis:run_analysis' %}">Create your first job</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Recent Ingestions -->
+    <div class="grid-x grid-margin-x mt2">
+        <div class="cell medium-12">
+            <h2>Recent Data Ingestions</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Database</th>
+                        <th>Status</th>
+                        <th>Started</th>
+                        <th>Stats</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_ingestions %}
+                    <tr>
+                        <td>{{ log.id }}</td>
+                        <td>{{ log.database_type }}://{{ log.database_host }}/{{ log.database_name }}</td>
+                        <td><span class="label {{ log.status }}">{{ log.status }}</span></td>
+                        <td>{{ log.started_at|date:"M d, Y H:i" }}</td>
+                        <td>Bills: {{ log.total_bills }}, Votes: {{ log.total_votes }}, People: {{ log.total_people }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">No ingestion logs available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Quick Links -->
+    <div class="grid-x grid-margin-x mt2">
+        <div class="cell medium-12">
+            <h2>Quick Links</h2>
+            <ul>
+                <li><a href="/graphql">GraphQL API</a></li>
+                <li><a href="/data/">Bulk Data Downloads</a></li>
+                <li><a href="/dashboard/">Data Quality Dashboard</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+.stats-card {
+    background: #f4f4f4;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.stats-card h3 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: #1779ba;
+}
+
+.stats-card p {
+    margin-bottom: 0;
+    color: #666;
+}
+
+.label {
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.875rem;
+}
+
+.label.pending {
+    background: #ffae00;
+    color: #fff;
+}
+
+.label.running {
+    background: #1779ba;
+    color: #fff;
+}
+
+.label.completed {
+    background: #3adb76;
+    color: #fff;
+}
+
+.label.failed {
+    background: #cc4b37;
+    color: #fff;
+}
+
+.mt1 { margin-top: 1rem; }
+.mt2 { margin-top: 2rem; }
+</style>
+
+<script>
+// Update live stats
+function updateStats() {
+    fetch('{% url "analysis:api_stats" %}')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('pending-jobs').textContent = data.pending_jobs;
+            document.getElementById('running-jobs').textContent = data.running_jobs;
+        });
+}
+
+// Update stats on load and every 10 seconds
+updateStats();
+setInterval(updateStats, 10000);
+</script>
+{% endblock %}

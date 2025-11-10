@@ -127,6 +127,7 @@ INSTALLED_APPS = [
     "bundles",
     "dashboards",
     "people_admin",
+    "analysis.apps.AnalysisConfig",
 ]
 
 MIDDLEWARE = [
