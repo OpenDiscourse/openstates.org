@@ -2,6 +2,22 @@
 
 This repository contains the code responsible for openstates.org, the website and v2 API (graphql).
 
+## New: Analysis Dashboard
+
+The Analysis Dashboard provides comprehensive tools for bulk data analysis, NLP processing, and member profile aggregation.
+
+**Quick Start**:
+- Web Interface: `http://localhost:8000/analysis/`
+- CLI: `python manage.py bulk_ingest --help`
+- Documentation: See [ANALYSIS_DEMO.md](ANALYSIS_DEMO.md) and [analysis/README.md](analysis/README.md)
+
+**Features**:
+- Bulk data ingestion to any database
+- Menu-driven web interface for data exploration
+- Legislator profile aggregation with voting records
+- Analysis job submission and monitoring
+- Support for future NLP/ML features (BERT, spaCy, embeddings)
+
 ## Make changes
 
 Changes should be made in a local checkout of the repo. There is a bit of setup to get a working DB and environment,
