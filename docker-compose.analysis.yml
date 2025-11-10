@@ -1,0 +1,96 @@
+# Docker Compose configuration for Analysis Dashboard
+# This file extends docker-compose.yml with analysis-specific services
+
+version: "3.5"
+
+services:
+  # Main Django application with analysis app enabled
+  django:
+    environment:
+      # Analysis-specific environment variables
+      - ANALYSIS_ENABLED=true
+      
+      # Optional: Use external database for analysis results
+      # Uncomment and configure for cloudcurio.cc or other external DB
+      # - ANALYSIS_DATABASE_URL=postgresql://user:pass@cloudcurio.cc:5432/analysis
+      
+      # Optional: Configure NLP settings (when NLP features are added)
+      # - SPACY_MODEL=en_core_web_sm
+      # - TRANSFORMERS_CACHE=/tmp/transformers
+      # - SENTENCE_TRANSFORMERS_HOME=/tmp/sentence-transformers
+    
+    volumes:
+      # Mount analysis app for development
+      - ./analysis:/code/analysis
+      
+      # Optional: Mount NLP models directory (when NLP features are added)
+      # - ./nlp_models:/nlp_models
+  
+  # Optional: Redis for job queue (for future Celery integration)
+  # redis:
+  #   image: redis:6-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - openstates-network
+  
+  # Optional: Celery worker for background jobs (for future implementation)
+  # celery:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/uwsgi/Dockerfile
+  #   command: celery -A web worker --loglevel=info
+  #   environment:
+  #     - DATABASE_URL
+  #     - CACHE_URL
+  #     - CELERY_BROKER_URL=redis://redis:6379/0
+  #   depends_on:
+  #     - redis
+  #     - django
+  #   networks:
+  #     - openstates-network
+  
+  # Optional: PostgreSQL for analysis data (separate from main DB)
+  # analysis-db:
+  #   image: postgres:14
+  #   environment:
+  #     POSTGRES_DATABASE: analysis
+  #     POSTGRES_PASSWORD: analysis_pass
+  #     POSTGRES_USER: analysis_user
+  #   ports:
+  #     - "5433:5432"
+  #   volumes:
+  #     - analysis-postgres:/var/lib/postgresql/data
+  #   networks:
+  #     - openstates-network
+
+volumes:
+  # analysis-postgres:
+  #   name: analysis-postgres
+
+networks:
+  openstates-network:
+    external: true
+
+# Usage Examples:
+# 
+# 1. Start with analysis dashboard:
+#    docker-compose -f docker-compose.yml -f docker-compose.analysis.yml up
+#
+# 2. Run migrations:
+#    docker-compose exec django python manage.py migrate analysis
+#
+# 3. Create superuser:
+#    docker-compose exec django python manage.py createsuperuser
+#
+# 4. Run bulk ingestion:
+#    docker-compose exec django python manage.py bulk_ingest --list-jurisdictions
+#    docker-compose exec django python manage.py bulk_ingest --jurisdictions "tx" --dry-run
+#
+# 5. Access services:
+#    - Web interface: http://localhost:8000/analysis/
+#    - GraphQL: http://localhost:8000/graphql
+#    - Admin: http://localhost:8000/djadmin/
+#
+# 6. Stop services:
+#    docker-compose -f docker-compose.yml -f docker-compose.analysis.yml down

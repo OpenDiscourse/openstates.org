@@ -1,0 +1,283 @@
+{% extends "public/components/base.html" %}
+{% load static %}
+
+{% block title %}{{ person.name }} - Legislator Profile - Open States{% endblock %}
+
+{% block content %}
+<div class="legislator-profile">
+    <div class="grid-x grid-margin-x">
+        <!-- Profile Header -->
+        <div class="cell medium-12">
+            <h1>{{ person.name }}</h1>
+            {% if person.image %}
+            <img src="{{ person.image }}" alt="{{ person.name }}" class="profile-image">
+            {% endif %}
+            
+            <div class="profile-meta">
+                {% if person.party %}
+                <span class="badge">{{ person.party.name }}</span>
+                {% endif %}
+                {% if person.current_role %}
+                <span class="badge">{{ person.current_role.title }}</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Statistics Overview -->
+        {% if profile %}
+        <div class="cell medium-12 mt2">
+            <h2>Voting Record</h2>
+            <div class="grid-x grid-margin-x">
+                <div class="cell medium-2">
+                    <div class="stat-box">
+                        <h3>{{ profile.total_votes }}</h3>
+                        <p>Total Votes</p>
+                    </div>
+                </div>
+                <div class="cell medium-2">
+                    <div class="stat-box yes">
+                        <h3>{{ profile.yes_votes }}</h3>
+                        <p>Yes</p>
+                    </div>
+                </div>
+                <div class="cell medium-2">
+                    <div class="stat-box no">
+                        <h3>{{ profile.no_votes }}</h3>
+                        <p>No</p>
+                    </div>
+                </div>
+                <div class="cell medium-2">
+                    <div class="stat-box">
+                        <h3>{{ profile.abstain_votes }}</h3>
+                        <p>Abstain</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cell medium-12 mt2">
+            <h2>Sponsored Legislation</h2>
+            <div class="grid-x grid-margin-x">
+                <div class="cell medium-3">
+                    <div class="stat-box">
+                        <h3>{{ profile.total_sponsored_bills }}</h3>
+                        <p>Total Bills</p>
+                    </div>
+                </div>
+                <div class="cell medium-3">
+                    <div class="stat-box primary">
+                        <h3>{{ profile.primary_sponsored_bills }}</h3>
+                        <p>Primary Sponsor</p>
+                    </div>
+                </div>
+                <div class="cell medium-3">
+                    <div class="stat-box">
+                        <h3>{{ profile.co_sponsored_bills }}</h3>
+                        <p>Co-Sponsor</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if profile.primary_topics %}
+        <div class="cell medium-12 mt2">
+            <h2>Primary Topics</h2>
+            <div class="topics">
+                {% for topic in profile.primary_topics %}
+                <span class="topic-badge">{{ topic }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if profile.voting_social_discrepancy %}
+        <div class="cell medium-12 mt2">
+            <h2>Analysis Insights</h2>
+            <div class="callout warning">
+                <p><strong>Voting-Social Media Discrepancy:</strong> {{ profile.voting_social_discrepancy|floatformat:2 }}</p>
+                <p>This metric indicates potential differences between voting patterns and social media statements.</p>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+        
+        <!-- Recent Votes -->
+        <div class="cell medium-12 mt2">
+            <h2>Recent Votes (Last 20)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Bill</th>
+                        <th>Motion</th>
+                        <th>Vote</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vote in recent_votes %}
+                    <tr>
+                        <td>{{ vote.vote_event.start_date|date:"M d, Y" }}</td>
+                        <td>
+                            {% if vote.vote_event.bill %}
+                            <a href="{{ vote.vote_event.bill.get_absolute_url }}">
+                                {{ vote.vote_event.bill.identifier }}
+                            </a>
+                            {% else %}
+                            N/A
+                            {% endif %}
+                        </td>
+                        <td>{{ vote.vote_event.motion_text|truncatewords:10 }}</td>
+                        <td><span class="vote-badge {{ vote.option }}">{{ vote.option }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">No recent votes available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Sponsored Bills -->
+        <div class="cell medium-12 mt2">
+            <h2>Sponsored Bills (Last 20)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Session</th>
+                        <th>Bill</th>
+                        <th>Title</th>
+                        <th>Role</th>
+                        <th>Analysis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sponsorship in sponsored_bills %}
+                    <tr>
+                        <td>{{ sponsorship.bill.legislative_session.identifier }}</td>
+                        <td>
+                            <a href="{{ sponsorship.bill.get_absolute_url }}">
+                                {{ sponsorship.bill.identifier }}
+                            </a>
+                        </td>
+                        <td>{{ sponsorship.bill.title|truncatewords:15 }}</td>
+                        <td>
+                            {% if sponsorship.primary %}
+                            <span class="badge primary">Primary</span>
+                            {% else %}
+                            <span class="badge">Co-Sponsor</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for analysis in analyzed_bills %}
+                            {% if analysis.bill_id == sponsorship.bill_id %}
+                            <span class="badge success">Analyzed</span>
+                            {% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">No sponsored bills available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Links -->
+        <div class="cell medium-12 mt2">
+            <a href="{% url 'analysis:search_legislators' %}" class="button">Back to Search</a>
+            <a href="{% url 'analysis:dashboard' %}" class="button">Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-image {
+    max-width: 200px;
+    border-radius: 50%;
+    margin: 1rem 0;
+}
+
+.profile-meta {
+    margin-bottom: 1rem;
+}
+
+.badge, .topic-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #e6e6e6;
+    border-radius: 3px;
+    margin-right: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.badge.primary {
+    background: #1779ba;
+    color: #fff;
+}
+
+.badge.success {
+    background: #3adb76;
+    color: #fff;
+}
+
+.stat-box {
+    background: #f4f4f4;
+    padding: 1rem;
+    text-align: center;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+}
+
+.stat-box h3 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.stat-box.yes h3 {
+    color: #3adb76;
+}
+
+.stat-box.no h3 {
+    color: #cc4b37;
+}
+
+.stat-box.primary h3 {
+    color: #1779ba;
+}
+
+.vote-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+
+.vote-badge.yes {
+    background: #3adb76;
+    color: #fff;
+}
+
+.vote-badge.no {
+    background: #cc4b37;
+    color: #fff;
+}
+
+.topics {
+    margin-top: 1rem;
+}
+
+.topic-badge {
+    background: #1779ba;
+    color: #fff;
+    margin-bottom: 0.5rem;
+}
+
+.mt2 {
+    margin-top: 2rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "public/components/base.html" %}
+{% load static %}
+
+{% block title %}Ingestion Logs - Analysis Dashboard - Open States{% endblock %}
+
+{% block content %}
+<div class="ingestion-logs">
+    <h1>Bulk Data Ingestion Logs</h1>
+    <p>View history of bulk data ingestion operations.</p>
+    
+    <table class="logs-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Database</th>
+                <th>Jurisdictions</th>
+                <th>Status</th>
+                <th>Started</th>
+                <th>Completed</th>
+                <th>Statistics</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.id }}</td>
+                <td>
+                    <code>{{ log.database_type }}://{{ log.database_host }}/{{ log.database_name }}</code>
+                </td>
+                <td>
+                    {% if log.jurisdictions %}
+                    {{ log.jurisdictions|join:", " }}
+                    {% else %}
+                    All
+                    {% endif %}
+                </td>
+                <td><span class="label {{ log.status }}">{{ log.status }}</span></td>
+                <td>{{ log.started_at|date:"M d, Y H:i" }}</td>
+                <td>
+                    {% if log.completed_at %}
+                    {{ log.completed_at|date:"M d, Y H:i" }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>
+                    <ul class="no-bullet">
+                        <li>Bills: {{ log.total_bills }}</li>
+                        <li>Votes: {{ log.total_votes }}</li>
+                        <li>People: {{ log.total_people }}</li>
+                    </ul>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No ingestion logs available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="mt2">
+        <div class="callout">
+            <h3>CLI Command</h3>
+            <p>To perform bulk data ingestion, use the following command:</p>
+            <pre>python manage.py bulk_ingest --connection-string "postgresql://user:pass@host:5432/dbname" --jurisdictions "tx,ca,ny"</pre>
+            <p>For more options, run:</p>
+            <pre>python manage.py bulk_ingest --help</pre>
+        </div>
+    </div>
+    
+    <div class="mt2">
+        <a href="{% url 'analysis:dashboard' %}" class="button">Back to Dashboard</a>
+    </div>
+</div>
+
+<style>
+.label {
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.875rem;
+}
+
+.label.running {
+    background: #1779ba;
+    color: #fff;
+}
+
+.label.completed {
+    background: #3adb76;
+    color: #fff;
+}
+
+.label.failed {
+    background: #cc4b37;
+    color: #fff;
+}
+
+code {
+    background: #f4f4f4;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+pre {
+    background: #f4f4f4;
+    padding: 1rem;
+    border-radius: 3px;
+    overflow-x: auto;
+}
+
+.no-bullet {
+    margin: 0;
+    list-style: none;
+}
+
+.mt2 {
+    margin-top: 2rem;
+}
+</style>
+{% endblock %}

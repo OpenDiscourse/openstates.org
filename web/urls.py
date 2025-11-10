@@ -14,6 +14,7 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     path("accounts/profile/", include("profiles.urls")),
     path("dashboard/", include("dashboards.urls")),
+    path("analysis/", include("analysis.urls")),
     re_path(
         "^graphql/?$",
         csrf_exempt(

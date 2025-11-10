@@ -1,0 +1,147 @@
+{% extends "public/components/base.html" %}
+{% load static %}
+
+{% block title %}Data Explorer - Analysis Dashboard - Open States{% endblock %}
+
+{% block content %}
+<div class="data-explorer">
+    <h1>Data Explorer</h1>
+    <p>Navigate and explore OpenStates data by jurisdiction and legislative session.</p>
+    
+    <form method="get" class="filter-form">
+        <div class="grid-x grid-margin-x">
+            <div class="cell medium-6">
+                <label>Select Jurisdiction
+                    <select name="jurisdiction" id="jurisdiction-select">
+                        <option value="">Select a jurisdiction...</option>
+                        {% for jur in jurisdictions %}
+                        <option value="{{ jur.id }}" {% if jur.id == selected_jurisdiction %}selected{% endif %}>
+                            {{ jur.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            <div class="cell medium-4">
+                <label>Select Session
+                    <select name="session" id="session-select" {% if not selected_jurisdiction %}disabled{% endif %}>
+                        <option value="">Select a session...</option>
+                        {% for session in sessions %}
+                        <option value="{{ session.id }}" {% if session.id == selected_session %}selected{% endif %}>
+                            {{ session.identifier }} - {{ session.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            <div class="cell medium-2">
+                <label>&nbsp;</label>
+                <button type="submit" class="button primary expanded">Explore</button>
+            </div>
+        </div>
+    </form>
+    
+    {% if selected_jurisdiction and selected_session %}
+    <div class="data-view mt2">
+        <h2>Data Summary</h2>
+        <div class="grid-x grid-margin-x">
+            <div class="cell medium-3">
+                <div class="stat-card">
+                    <h3 id="bills-count">-</h3>
+                    <p>Bills</p>
+                </div>
+            </div>
+            <div class="cell medium-3">
+                <div class="stat-card">
+                    <h3 id="votes-count">-</h3>
+                    <p>Votes</p>
+                </div>
+            </div>
+            <div class="cell medium-3">
+                <div class="stat-card">
+                    <h3 id="people-count">-</h3>
+                    <p>People</p>
+                </div>
+            </div>
+            <div class="cell medium-3">
+                <div class="stat-card">
+                    <h3 id="orgs-count">-</h3>
+                    <p>Organizations</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="action-buttons mt2">
+            <h3>Available Actions</h3>
+            <div class="button-group">
+                <a href="/data/" class="button">Download Bulk Data</a>
+                <a href="{% url 'analysis:run_analysis' %}?jurisdiction={{ selected_jurisdiction }}&session={{ selected_session }}" 
+                   class="button primary">Run Analysis</a>
+                <a href="/graphql" class="button">GraphQL API</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="mt2">
+        <a href="{% url 'analysis:dashboard' %}" class="button">Back to Dashboard</a>
+    </div>
+</div>
+
+<style>
+.filter-form {
+    background: #f4f4f4;
+    padding: 1.5rem;
+    border-radius: 5px;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: #e6e6e6;
+    padding: 1.5rem;
+    text-align: center;
+    border-radius: 5px;
+}
+
+.stat-card h3 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: #1779ba;
+}
+
+.stat-card p {
+    margin-bottom: 0;
+    color: #666;
+}
+
+.action-buttons {
+    background: #f9f9f9;
+    padding: 1.5rem;
+    border-radius: 5px;
+}
+
+.mt2 {
+    margin-top: 2rem;
+}
+</style>
+
+<script>
+// Auto-submit on jurisdiction change to load sessions
+document.getElementById('jurisdiction-select').addEventListener('change', function() {
+    if (this.value) {
+        // Enable session select and submit form
+        document.getElementById('session-select').disabled = false;
+        this.form.submit();
+    }
+});
+
+// Load data counts if session is selected
+{% if selected_jurisdiction and selected_session %}
+// In a real implementation, these would be API calls
+document.getElementById('bills-count').textContent = '...';
+document.getElementById('votes-count').textContent = '...';
+document.getElementById('people-count').textContent = '...';
+document.getElementById('orgs-count').textContent = '...';
+{% endif %}
+</script>
+{% endblock %}
