@@ -1,9 +1,9 @@
 """Health check and status endpoints."""
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from pydantic import BaseModel
 import httpx
 
@@ -15,7 +15,7 @@ router = APIRouter(tags=["Health"])
 
 class HealthStatus(BaseModel):
     """Health check response model."""
-    
+
     status: str
     timestamp: str
     version: str
@@ -24,7 +24,7 @@ class HealthStatus(BaseModel):
 
 class DetailedHealthStatus(BaseModel):
     """Detailed health check with dependencies."""
-    
+
     status: str
     timestamp: str
     version: str
@@ -34,7 +34,7 @@ class DetailedHealthStatus(BaseModel):
 
 class TelemetryInfo(BaseModel):
     """Telemetry configuration info."""
-    
+
     opentelemetry_enabled: bool
     prometheus_enabled: bool
     service_name: str
@@ -46,7 +46,7 @@ async def health_check():
     """Basic health check endpoint."""
     return HealthStatus(
         status="healthy",
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=datetime.now(timezone.utc).isoformat(),
         version=settings.app_version,
         service=settings.app_name,
     )
@@ -56,7 +56,7 @@ async def health_check():
 async def detailed_health_check():
     """Detailed health check with dependency status."""
     checks = {}
-    
+
     # Check Django backend
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
@@ -72,15 +72,15 @@ async def detailed_health_check():
             "error": str(e),
         }
         logger.error(f"Django backend health check failed: {e}")
-    
+
     # Overall status
     overall_status = "healthy"
     if any(check.get("status") == "unhealthy" for check in checks.values()):
         overall_status = "degraded"
-    
+
     return DetailedHealthStatus(
         status=overall_status,
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=datetime.now(timezone.utc).isoformat(),
         version=settings.app_version,
         service=settings.app_name,
         checks=checks,

@@ -5,7 +5,6 @@ from typing import Optional
 from prometheus_client import Counter, Histogram, Gauge, REGISTRY, generate_latest
 from opentelemetry import metrics as otel_metrics
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.exporter.prometheus import PrometheusMetricReader
 from opentelemetry.sdk.resources import Resource
 
@@ -56,29 +55,29 @@ def setup_metrics() -> Optional[MeterProvider]:
     if not settings.prometheus_enabled:
         logger.info("Prometheus metrics are disabled")
         return None
-    
+
     try:
         # Create resource
         resource = Resource.create({
             "service.name": settings.otel_service_name,
             "service.version": settings.app_version,
         })
-        
+
         # Create Prometheus metric reader
         prometheus_reader = PrometheusMetricReader()
-        
+
         # Create meter provider
         meter_provider = MeterProvider(
             resource=resource,
             metric_readers=[prometheus_reader]
         )
-        
+
         # Set global meter provider
         otel_metrics.set_meter_provider(meter_provider)
-        
+
         logger.info("Prometheus metrics configured successfully")
         return meter_provider
-    
+
     except Exception as e:
         logger.error(f"Failed to configure Prometheus metrics: {e}")
         return None

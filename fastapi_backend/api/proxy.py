@@ -4,7 +4,6 @@ import time
 from typing import Optional
 
 from fastapi import APIRouter, Request, Response, HTTPException
-from fastapi.responses import StreamingResponse
 import httpx
 
 from fastapi_backend.config.settings import settings
@@ -40,10 +39,10 @@ async def proxy_request(
     """Proxy a request to the Django backend."""
     start_time = time.time()
     method = method or request.method
-    
+
     # Build target URL
     target_url = f"{settings.django_backend_url}/{path}"
-    
+
     with tracer.start_as_current_span(
         f"proxy_{method}_{path}",
         attributes={
@@ -56,21 +55,21 @@ async def proxy_request(
         try:
             # Get HTTP client
             client = get_http_client()
-            
+
             # Prepare headers (exclude host header)
             headers = dict(request.headers)
             headers.pop("host", None)
-            
+
             # Add correlation ID
             if hasattr(request.state, "correlation_id"):
                 headers["X-Correlation-ID"] = request.state.correlation_id
-            
+
             # Get request body
             body = await request.body()
-            
+
             # Forward request
             logger.info(f"Proxying {method} request to {target_url}")
-            
+
             response = await client.request(
                 method=method,
                 url=target_url,
@@ -78,7 +77,7 @@ async def proxy_request(
                 params=dict(request.query_params),
                 content=body,
             )
-            
+
             # Record metrics
             duration = time.time() - start_time
             proxy_requests_total.labels(
@@ -86,16 +85,16 @@ async def proxy_request(
                 method=method,
                 status_code=response.status_code
             ).inc()
-            
+
             proxy_request_duration_seconds.labels(
                 backend="django",
                 method=method
             ).observe(duration)
-            
+
             # Add span attributes
             span.set_attribute("proxy.status_code", response.status_code)
             span.set_attribute("proxy.duration_ms", duration * 1000)
-            
+
             # Return response
             return Response(
                 content=response.content,
@@ -103,19 +102,19 @@ async def proxy_request(
                 headers=dict(response.headers),
                 media_type=response.headers.get("content-type", "application/octet-stream")
             )
-        
+
         except httpx.TimeoutException as e:
             duration = time.time() - start_time
             span.record_exception(e)
             logger.error(f"Timeout proxying request to {target_url}: {e}")
             raise HTTPException(status_code=504, detail="Gateway timeout")
-        
+
         except httpx.RequestError as e:
             duration = time.time() - start_time
             span.record_exception(e)
             logger.error(f"Error proxying request to {target_url}: {e}")
             raise HTTPException(status_code=502, detail="Bad gateway")
-        
+
         except Exception as e:
             duration = time.time() - start_time
             span.record_exception(e)

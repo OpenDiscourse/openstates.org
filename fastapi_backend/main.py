@@ -24,23 +24,23 @@ async def lifespan(app: FastAPI):
     """Application lifespan manager."""
     # Startup
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
-    
+
     # Setup telemetry
     tracer_provider = setup_tracing()
     meter_provider = setup_metrics()
-    
+
     if tracer_provider:
         logger.info("Tracing initialized")
     if meter_provider:
         logger.info("Metrics initialized")
-    
+
     logger.info(f"Application started on {settings.host}:{settings.port}")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down application")
-    
+
     # Cleanup HTTP client
     if proxy.http_client:
         await proxy.http_client.aclose()
@@ -110,7 +110,7 @@ async def global_exception_handler(request, exc):
             }
         }
     )
-    
+
     return JSONResponse(
         status_code=500,
         content={
@@ -122,7 +122,7 @@ async def global_exception_handler(request, exc):
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "fastapi_backend.main:app",
         host=settings.host,

@@ -2,6 +2,30 @@
 
 This repository contains the code responsible for openstates.org, the website and v2 API (graphql).
 
+## New: FastAPI Backend with Observability
+
+A full-featured FastAPI backend service with proxy capabilities, comprehensive observability, and OpenTelemetry integration.
+
+**Quick Start**:
+- API: `http://localhost:8001`
+- Documentation: `http://localhost:8001/api/docs`
+- Metrics: `http://localhost:8001/api/metrics`
+- Integration Guide: See [FASTAPI_INTEGRATION.md](FASTAPI_INTEGRATION.md)
+
+**Features**:
+- Reverse proxy to Django backend
+- OpenTelemetry distributed tracing
+- Prometheus metrics collection
+- Structured JSON logging with correlation IDs
+- Health checks and readiness probes
+- Rate limiting and CORS support
+- Full API documentation
+
+**Run with Docker Compose**:
+```bash
+docker-compose up fastapi
+```
+
 ## New: Analysis Dashboard
 
 The Analysis Dashboard provides comprehensive tools for bulk data analysis, NLP processing, and member profile aggregation.

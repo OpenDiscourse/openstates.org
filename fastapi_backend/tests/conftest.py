@@ -15,9 +15,9 @@ def client():
 def mock_settings(monkeypatch):
     """Mock settings for testing."""
     from fastapi_backend.config import settings
-    
+
     monkeypatch.setattr(settings.settings, "debug", True)
     monkeypatch.setattr(settings.settings, "otel_enabled", False)
     monkeypatch.setattr(settings.settings, "rate_limit_enabled", False)
-    
+
     return settings.settings
