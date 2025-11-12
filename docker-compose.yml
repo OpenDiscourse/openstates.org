@@ -40,6 +40,28 @@ services:
     networks:
       - openstates-network
 
+  fastapi:
+    build:
+      context: .
+      dockerfile: fastapi_backend/Dockerfile
+    ports:
+      - "8001:8001"
+      - "9090:9090"
+    environment:
+      - DEBUG=True
+      - DJANGO_BACKEND_URL=http://django:8000
+      - OTEL_ENABLED=true
+      - OTEL_SERVICE_NAME=openstates-fastapi
+      - PROMETHEUS_ENABLED=true
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+    volumes:
+      - .:/app
+    depends_on:
+      - django
+    networks:
+      - openstates-network
+
   db:
     profiles:
       - db
