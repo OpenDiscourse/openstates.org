@@ -26,4 +26,12 @@ urlpatterns = [
     # API endpoints
     path('api/job-status/<int:job_id>/', views.api_job_status, name='api_job_status'),
     path('api/stats/', views.api_stats, name='api_stats'),
+    
+    # Micro-statements
+    path('micro-statements/', views.micro_statements_explorer, name='micro_statements_explorer'),
+    path('micro-statements/<int:statement_id>/', views.micro_statement_detail, name='micro_statement_detail'),
+    
+    # Micro-statements API
+    path('api/micro-statements/comparison/', views.api_micro_statements_comparison, name='api_micro_statements_comparison'),
+    path('api/micro-statements/search/', views.api_micro_statements_search, name='api_micro_statements_search'),
 ]

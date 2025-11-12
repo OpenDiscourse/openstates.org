@@ -217,3 +217,80 @@ class DataIngestionLog(models.Model):
     
     def __str__(self):
         return f"Ingestion {self.id} - {self.status} ({self.started_at})"
+
+
+class MicroStatement(models.Model):
+    """
+    Store extracted micro-statements from bills following the pattern:
+    Actor (politicians/legislators) + Action (verb) + Target (voters/citizens)
+    
+    Enables binning and comparison across years, districts, parties, and bills.
+    """
+    
+    STATEMENT_TYPES = [
+        ('action', 'Legislative Action'),
+        ('position', 'Political Position'),
+        ('impact', 'Impact Statement'),
+    ]
+    
+    SENTIMENT_CHOICES = [
+        ('positive', 'Positive'),
+        ('negative', 'Negative'),
+        ('neutral', 'Neutral'),
+        ('mixed', 'Mixed'),
+    ]
+    
+    id = models.AutoField(primary_key=True)
+    bill = models.ForeignKey(Bill, on_delete=models.CASCADE, related_name='micro_statements')
+    bill_text_analysis = models.ForeignKey(
+        BillTextAnalysis, 
+        on_delete=models.CASCADE, 
+        related_name='micro_statements',
+        null=True,
+        blank=True
+    )
+    
+    # Extracted statement components
+    actor = models.CharField(max_length=500, help_text="Who is taking action (e.g., legislators, politicians)")
+    action = models.CharField(max_length=500, help_text="What action is being taken (verb phrase)")
+    target = models.CharField(max_length=500, help_text="Who is affected (e.g., voters, citizens, groups)")
+    
+    # Full statement text
+    statement_text = models.TextField(help_text="Complete extracted statement")
+    original_text = models.TextField(help_text="Original text from bill", blank=True)
+    
+    # Classification
+    statement_type = models.CharField(max_length=20, choices=STATEMENT_TYPES, default='action')
+    sentiment = models.CharField(max_length=20, choices=SENTIMENT_CHOICES, default='neutral')
+    sentiment_score = models.FloatField(null=True, blank=True, help_text="Sentiment score from -1 (negative) to 1 (positive)")
+    
+    # Metadata for binning and comparison
+    session_year = models.IntegerField(null=True, blank=True, help_text="Legislative session year")
+    jurisdiction = models.CharField(max_length=10, blank=True, help_text="State/jurisdiction code")
+    district = models.CharField(max_length=100, blank=True, help_text="Legislative district")
+    party = models.CharField(max_length=50, blank=True, help_text="Political party")
+    
+    # Named entities extracted
+    entities = models.JSONField(default=dict, blank=True, help_text="Named entities (people, orgs, locations)")
+    
+    # Extraction metadata
+    confidence_score = models.FloatField(null=True, blank=True, help_text="Confidence in extraction quality")
+    extraction_method = models.CharField(max_length=100, blank=True, help_text="Method used for extraction")
+    extracted_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['bill']),
+            models.Index(fields=['session_year']),
+            models.Index(fields=['jurisdiction']),
+            models.Index(fields=['district']),
+            models.Index(fields=['party']),
+            models.Index(fields=['sentiment']),
+            models.Index(fields=['statement_type']),
+            models.Index(fields=['session_year', 'jurisdiction']),
+            models.Index(fields=['session_year', 'party']),
+        ]
+        ordering = ['-extracted_at']
+    
+    def __str__(self):
+        return f"{self.actor} {self.action} {self.target}"

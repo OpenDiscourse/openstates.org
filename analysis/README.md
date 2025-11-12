@@ -16,11 +16,13 @@ The Analysis Dashboard provides comprehensive tools for bulk data analysis, NLP 
 - Real-time job status monitoring
 - Legislator profile aggregation
 
-### 3. NLP Analysis (Planned)
-- BERT-based sentiment analysis
-- spaCy entity extraction
-- Sentence transformer embeddings
-- Topic modeling
+### 3. NLP Analysis
+- **Micro-statement extraction**: Extract Actor + Action + Target triples from bills
+- **BERT-based sentiment analysis**: Classify statements as positive/negative/neutral
+- **spaCy entity extraction**: Extract people, organizations, locations from text
+- **Sentence transformer embeddings**: Generate semantic embeddings for similarity
+- **Binning & comparison**: Analyze across years, jurisdictions, parties, districts
+- See [NLP_GUIDE.md](NLP_GUIDE.md) for detailed documentation
 
 ### 4. Member Profile Viewer
 - Aggregated legislator data
@@ -134,16 +136,32 @@ services:
       - DATABASE_URL=postgresql://user:pass@external-host:5432/dbname
 ```
 
-## NLP Integration (Future)
+## NLP Integration
 
-To add NLP capabilities, install additional dependencies:
+NLP capabilities are now built into the analysis app.
 
+### Setup
+
+Install dependencies:
 ```bash
-poetry add spacy transformers sentence-transformers
+poetry install
 python -m spacy download en_core_web_sm
 ```
 
-Then implement analysis workers in `analysis/workers/` directory.
+### Extract Micro-Statements
+
+```bash
+# Extract from Texas bills
+python manage.py extract_statements --jurisdiction tx --limit 100
+
+# Extract with session filter
+python manage.py extract_statements --jurisdiction ca --session 2023
+
+# View results
+# Navigate to: http://localhost:8000/analysis/micro-statements/
+```
+
+See [NLP_GUIDE.md](NLP_GUIDE.md) for complete documentation.
 
 ## API Endpoints
 

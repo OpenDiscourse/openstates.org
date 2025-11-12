@@ -28,23 +28,6 @@ openstates = "6.17.8"
 rrl = "^0.3.1"
 PyGithub = "^1.54.1"
 yamlordereddictloader = "^0.4.0"
-# FastAPI and Observability Dependencies
-fastapi = "^0.109.1"
-uvicorn = {extras = ["standard"], version = "^0.24.0"}
-httpx = "^0.25.0"
-python-multipart = "^0.0.18"
-pydantic = "^2.4.0"
-pydantic-settings = "^2.0.0"
-# OpenTelemetry
-opentelemetry-api = "^1.21.0"
-opentelemetry-sdk = "^1.21.0"
-opentelemetry-instrumentation-fastapi = "^0.42b0"
-opentelemetry-instrumentation-httpx = "^0.42b0"
-opentelemetry-instrumentation-logging = "^0.42b0"
-opentelemetry-exporter-otlp-proto-grpc = "^1.21.0"
-opentelemetry-exporter-prometheus = "^1.21.0"
-# Prometheus and Metrics
-prometheus-client = "^0.18.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.0"
